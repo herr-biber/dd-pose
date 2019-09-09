@@ -1,0 +1,11 @@
+tornado==4.*
+notebook
+opencv-python
+imageio
+Pillow
+pandas
+plotly
+multiprocess
+psutil
+requests
+transformations

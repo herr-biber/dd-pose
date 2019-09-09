@@ -1,0 +1,8 @@
+*.pyc
+__pycache__
+venv
+resources/driveahead-rpys-frontal-deg.npy
+resources/driveahead-xyzs.npy
+bin/orca
+bin/orca-1.2.1-x86_64.AppImage
+data
