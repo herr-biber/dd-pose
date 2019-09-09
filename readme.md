@@ -21,7 +21,7 @@ contact-dd-pose-dataset@tudelft.nl
 Clone this repository:
 
     cd ~
-    git clone [https://github.com/herr-biber/dd-pose.git
+    git clone https://github.com/herr-biber/dd-pose.git
 
 Set access credentials in `dd-pose/00-activate.sh`
 
