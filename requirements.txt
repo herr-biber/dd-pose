@@ -1,4 +1,5 @@
-tornado==4.*
+numpy
+tornado<5
 notebook
 opencv-python
 imageio
@@ -8,4 +9,5 @@ plotly
 multiprocess
 psutil
 requests
+setuptools
 transformations
