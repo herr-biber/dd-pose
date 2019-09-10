@@ -6,7 +6,7 @@ if [ -z ${DD_POSE_SOURCED+x} ]; then echo "DD_POSE_SOURCED environment variable 
 # ask for password
 sudo -k
 sudo apt-get update
-sudo apt-get install -y python2.7 python-pip parallel curl coreutils imagemagick mencoder python-opencv python-virtualenv
+sudo apt-get install -y python python-dev python-pip parallel curl coreutils imagemagick mencoder python-opencv python-virtualenv
 # plotly orca binary dependencies
 sudo apt-get install -y libgtk2.0-0 libgconf-2-4
 
