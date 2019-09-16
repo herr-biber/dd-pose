@@ -51,15 +51,8 @@ class DatasetItem:
             self.stamps = set(int(line.strip()) for line in fp.readlines())
 
         # load camdriver-head transforms
-        T_camdriver_head_file = os.path.join(self.dataset_item_dir, 't-camdriver-head.json')
-        if os.path.exists(T_camdriver_head_file):
-            self.T_camdriver_head_transforms = StampedTransforms(T_camdriver_head_file, transform_name=None)
-            if self.is_test:
-                print("WW: working with test set which has head pose measurements")
-        else:
-            self.T_camdriver_head_transforms = StampedTransforms()
-            assert self.is_test, "head pose measurements not found. did you run 04-untar.sh?"
-      
+        self.load_T_camdriver_head()
+
         # lazy loaded
         self.static_transforms = None
         self.stw_angles = None
@@ -87,12 +80,23 @@ class DatasetItem:
             
     def load_all(self):
         # load all lazy loadable attributes
+        self.load_static_transforms()
         self.load_stw_angles()
         self.load_gps()
         self.load_headings()
         self.load_velocity()
         self.load_dynamics()
         self.load_occlusion_states()
+
+    def load_T_camdriver_head(self):
+        T_camdriver_head_file = os.path.join(self.dataset_item_dir, 't-camdriver-head.json')
+        if os.path.exists(T_camdriver_head_file):
+            self.T_camdriver_head_transforms = StampedTransforms(T_camdriver_head_file, transform_name=None)
+            if self.is_test:
+                print("WW: working with test set which has head pose measurements")
+        else:
+            self.T_camdriver_head_transforms = StampedTransforms()
+            assert self.is_test, "head pose measurements not found. did you run 04-untar.sh?"
 
 
     def load_static_transforms(self):
