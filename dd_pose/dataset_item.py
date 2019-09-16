@@ -60,18 +60,8 @@ class DatasetItem:
             self.T_camdriver_head_transforms = StampedTransforms()
             assert self.is_test, "head pose measurements not found. did you run 04-untar.sh?"
       
-        # load static transforms
-        static_transforms_path = os.path.join(self.dataset_item_dir, 'static-transforms.json')
-        assert os.path.exists(static_transforms_path)
-        with open(static_transforms_path) as fp:
-            static_transforms = json.load(fp)
-        self.static_transforms = dict()
-        for k, v in static_transforms.items():
-            if v is not None:
-                v = np.array(v)
-            self.static_transforms[k] = v
-    
         # lazy loaded
+        self.static_transforms = None
         self.stw_angles = None
         self.gps = None
         self.headings = None
@@ -103,6 +93,18 @@ class DatasetItem:
         self.load_velocity()
         self.load_dynamics()
         self.load_occlusion_states()
+
+
+    def load_static_transforms(self):
+        static_transforms_path = os.path.join(self.dataset_item_dir, 'static-transforms.json')
+        assert os.path.exists(static_transforms_path)
+        with open(static_transforms_path) as fp:
+            static_transforms = json.load(fp)
+        self.static_transforms = dict()
+        for k, v in static_transforms.items():
+            if v is not None:
+                v = np.array(v)
+            self.static_transforms[k] = v
        
     def load_stw_angles(self):
         # load stw angles
@@ -203,12 +205,18 @@ class DatasetItem:
 
     # STATIC TRANSFORMS
     def get_T_camdriver_camdocu(self):
+        if self.static_transforms is None:
+            self.load_static_transforms()
         return self.static_transforms['T-camdriver-camdocu']
 
     def get_T_camdriver_gps(self):
+        if self.static_transforms is None:
+            self.load_static_transforms()
         return self.static_transforms['T-camdriver-gps']
     
     def get_T_camdriver_body(self):
+        if self.static_transforms is None:
+            self.load_static_transforms()
         return self.static_transforms['T-camdriver-body']
     
     def get_stw_angle(self, stamp):
