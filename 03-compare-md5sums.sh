@@ -20,7 +20,7 @@ function compare_md5sum()
         echo "md5sum file does not exist. Skipping comparison. Have you run 02-compute-md5sums.sh?"
         return 1
     fi
-    if diff <(curl --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" https://dd-pose-dataset.tudelft.nl/restricted/$FILE.md5sum 2>/dev/null) "$FILE_ABS.md5sum"; then
+    if diff <(curl --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" $DD_POSE_DOWNLOAD_URI/$FILE.md5sum 2>/dev/null) "$FILE_ABS.md5sum"; then
         echo "ok"
         touch $FILE_ABS.md5sum-correct
     else

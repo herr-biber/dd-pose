@@ -12,6 +12,7 @@ DD_POSE_DIR=$THIS_DIR
 # this path should have at least 1TB of free space (500GB for downloaded files and 500GB for extraction)
 DD_POSE_DATA_ROOT_DIR=$THIS_DIR/data
 DD_POSE_DATA_DIR=$DD_POSE_DATA_ROOT_DIR/01-extracted
+DD_POSE_DOWNLOAD_URI=https://dd-pose-dataset.tudelft.nl/eval/downloads/download_file
 # user and password you obtained by registering at https://dd-pose-dataset.tudelft.nl
 # fill in an uncomment lines
 #DD_POSE_USER=
@@ -27,12 +28,14 @@ else
     echo "DD_POSE_DIR=$DD_POSE_DIR"
     echo "DD_POSE_DATA_ROOT_DIR=$DD_POSE_DATA_ROOT_DIR"
     echo "DD_POSE_DATA_DIR=$DD_POSE_DATA_DIR"
+    echo "DD_POSE_DOWNLOAD_URI=$DD_POSE_DOWNLOAD_URI"
     echo "DD_POSE_USER"
     echo "DD_POSE_PASSWORD"
     echo "DD_POSE_SOURCED"
     export DD_POSE_DIR
     export DD_POSE_DATA_ROOT_DIR
     export DD_POSE_DATA_DIR
+    export DD_POSE_DOWNLOAD_URI
     export DD_POSE_USER
     export DD_POSE_PASSWORD
     export DD_POSE_SOURCED=

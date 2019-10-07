@@ -23,16 +23,16 @@ function download_file()
     else
         local FILE_SIZE="-1"
     fi
-    if [ -f $DEST ] && curl --fail --silent --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" -i --head https://dd-pose-dataset.tudelft.nl/restricted/$FILE | grep "Content-Length: $FILE_SIZE"; then
+    if [ -f $DEST ] && curl --fail --silent --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" -i --head $DD_POSE_DOWNLOAD_URI/$FILE | grep "Content-Length: $FILE_SIZE"; then
         echo "File already downloaded and same size"
         touch $DEST.downloaded
         return 2
     fi
 
     # download with autoresume
-#    if curl --fail --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" https://dd-pose-dataset.tudelft.nl/restricted/$FILE --output $DEST --continue-at -; then
+#    if curl --fail --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" $DD_POSE_DOWNLOAD_URI/$FILE --output $DEST --continue-at -; then
     # download without autoresume
-    if curl --fail --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" https://dd-pose-dataset.tudelft.nl/restricted/$FILE --output $DEST ; then
+    if curl --fail --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" $DD_POSE_DOWNLOAD_URI/$FILE --output $DEST ; then
         # create finish file to make sure script has not aborted
         touch $DEST.downloaded
     fi
