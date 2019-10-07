@@ -17,8 +17,9 @@ def get_dashboard(di, stamp):
     # left driver image, head, landmarks, marker
     img, pcm = di.get_img_driver_left(stamp)
     img_color = np.dstack((img, img, img)) # bgr
-    image_decorator = ImageDecorator(img_color, pcm)
-    image_decorator.draw_axis(T_camdriver_head)
+    if T_camdriver_head is not None:
+        image_decorator = ImageDecorator(img_color, pcm)
+        image_decorator.draw_axis(T_camdriver_head)
     # showimage(img_color)
 
     # put image on canvas
@@ -31,7 +32,7 @@ def get_dashboard(di, stamp):
         image_decorator = ImageDecorator(img, pcm)
         T_camdriver_camdocu = di.get_T_camdriver_camdocu()
 
-        if T_camdriver_camdocu is not None:
+        if T_camdriver_camdocu is not None and T_camdriver_head is not None:
             T_camdocu_camdriver = np.linalg.inv(T_camdriver_camdocu)
             image_decorator.draw_axis(T_camdocu_camdriver)
             image_decorator.draw_axis(T_camdocu_camdriver.dot(T_camdriver_head))
@@ -87,8 +88,9 @@ def get_dashboard(di, stamp):
         heading_stamp, heading = heading
         cv2.putText(canvas, "heading:    %03.1f deg" % heading, (column2_u, column2_v+9*line_distance), cv2.FONT_HERSHEY_PLAIN, font_scale, text_color, 1)
 
-    T_headfrontal_head = np.dot(T_headfrontal_camdriver, T_camdriver_head)
-    roll, pitch, yaw = tr.euler_from_matrix(T_headfrontal_head, 'sxyz')
-    cv2.putText(canvas, "rpy: (%.1f, %.1f, %.1f) deg" % tuple(np.rad2deg((roll, pitch, yaw)).tolist()), (column2_u, column2_v+10*line_distance), cv2.FONT_HERSHEY_PLAIN, font_scale, text_color, 1)
+    if T_camdriver_head is not None:
+        T_headfrontal_head = np.dot(T_headfrontal_camdriver, T_camdriver_head)
+        roll, pitch, yaw = tr.euler_from_matrix(T_headfrontal_head, 'sxyz')
+        cv2.putText(canvas, "rpy: (%.1f, %.1f, %.1f) deg" % tuple(np.rad2deg((roll, pitch, yaw)).tolist()), (column2_u, column2_v+11*line_distance), cv2.FONT_HERSHEY_PLAIN, font_scale, text_color, 1)
 
     return canvas
