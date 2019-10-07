@@ -93,4 +93,7 @@ def get_dashboard(di, stamp):
         roll, pitch, yaw = tr.euler_from_matrix(T_headfrontal_head, 'sxyz')
         cv2.putText(canvas, "rpy: (%.1f, %.1f, %.1f) deg" % tuple(np.rad2deg((roll, pitch, yaw)).tolist()), (column2_u, column2_v+11*line_distance), cv2.FONT_HERSHEY_PLAIN, font_scale, text_color, 1)
 
+        x, y, z = T_camdriver_head[0:3, 3]
+        cv2.putText(canvas, "xyz: (%.2f, %.2f, %.2f) m" % (x, y, z), (column2_u, column2_v+12*line_distance), cv2.FONT_HERSHEY_PLAIN, font_scale, text_color, 1)
+
     return canvas
