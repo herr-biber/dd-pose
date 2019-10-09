@@ -8,7 +8,6 @@ try:
 except:
     pass
 
-dd_pose_dir = os.environ['DD_POSE_DIR']
 dd_pose_data_dir = os.environ['DD_POSE_DATA_DIR']
 
 class StampedTransforms:
