@@ -12,15 +12,21 @@ dd_pose_dir = os.environ['DD_POSE_DIR']
 dd_pose_data_dir = os.environ['DD_POSE_DATA_DIR']
 
 class StampedTransforms:
-    def __init__(self, file=None, transform_name=None):
+    def __init__(self, fp=None, transform_name=None):
+        """
+        fp: file-like object pointing to json content
+        """
         
         self.transforms = dict()
-        if file is not None:
-            assert os.path.isfile(file), file
-            with open(file) as fp:
-                master_stamps_dict = json.load(fp)
+        if fp is not None:
+            master_stamps_dict = json.load(fp)
+            
             for stamp, transform in master_stamps_dict.items():
-                self.transforms[int(stamp)] = (int(stamp), np.array(transform))
+                stamp = int(stamp)
+                transform = np.array(transform)
+                if transform.shape != (4, 4):
+                    raise ValueError("Transform for stamp %ld is malformed" % stamp)
+                self.transforms[int(stamp)] = (stamp, transform)
                 
     def get_transform(self, stamp):
         if stamp not in self.transforms:
@@ -91,7 +97,8 @@ class DatasetItem:
     def load_T_camdriver_head(self):
         T_camdriver_head_file = os.path.join(self.dataset_item_dir, 't-camdriver-head.json')
         if os.path.exists(T_camdriver_head_file):
-            self.T_camdriver_head_transforms = StampedTransforms(T_camdriver_head_file, transform_name=None)
+            with open(T_camdriver_head_file) as fp:
+                self.T_camdriver_head_transforms = StampedTransforms(fp, transform_name=None)
             if self.is_test:
                 print("WW: working with test set which has head pose measurements")
         else:
