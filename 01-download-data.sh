@@ -23,10 +23,18 @@ function download_file()
     else
         local FILE_SIZE="-1"
     fi
+
+    STATUS_CODE=$(curl --fail --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" --head --silent --write-out "%{http_code}" $DD_POSE_DOWNLOAD_URI/$FILE  --output /dev/null)
+    # echo "Status code: $STATUS_CODE"
+    if [ $STATUS_CODE -eq 303 ]; then
+        echo "User not approved, yet. Please trigger approval at DD-Pose team"
+        return 2
+    fi
+
     if [ -f $DEST ] && curl --fail --silent --basic --user "$DD_POSE_USER:$DD_POSE_PASSWORD" -i --head $DD_POSE_DOWNLOAD_URI/$FILE | grep "Content-Length: $FILE_SIZE"; then
         echo "File already downloaded and same size"
         touch $DEST.downloaded
-        return 2
+        return 3
     fi
 
     # download with autoresume
