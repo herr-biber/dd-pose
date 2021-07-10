@@ -9,7 +9,8 @@ THIS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")"; pwd)"
 
 # variables to configure
 DD_POSE_DIR=$THIS_DIR
-# this path should have at least 1TB of free space (500GB for downloaded files and 500GB for extraction)
+# this path should have at least 1.8TB of free space (890GB for downloaded files and 900GB for extraction)
+# see also https://github.com/herr-biber/dd-pose/issues/4
 DD_POSE_DATA_ROOT_DIR=$THIS_DIR/data
 DD_POSE_DATA_DIR=$DD_POSE_DATA_ROOT_DIR/01-extracted
 DD_POSE_DOWNLOAD_URI=https://dd-pose-dataset.tudelft.nl/eval/downloads/download_file
