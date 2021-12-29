@@ -1,5 +1,6 @@
 *.pyc
 __pycache__
+.ipynb_checkpoints
 venv
 resources/driveahead-rpys-frontal-deg.npy
 resources/driveahead-xyzs.npy
