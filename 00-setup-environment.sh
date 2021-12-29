@@ -14,7 +14,7 @@ if [ ! -f $DD_POSE_DIR/venv/bin/activate ]; then
 fi
 source $DD_POSE_DIR/venv/bin/activate
 
-pip install pip --upgrade
+pip3 install pip>=19.3 --upgrade
 pip install setuptools --upgrade # to fix pip install behind proxy
 pip install numpy --upgrade # to fix transformations install
 pip install -r $DD_POSE_DIR/requirements.txt --upgrade
