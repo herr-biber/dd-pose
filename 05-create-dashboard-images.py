@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 import os
@@ -38,5 +38,7 @@ def create_and_write_dashboard(stamp):
 # create dashboards in parallel
 p = Pool(8)
 p.map(create_and_write_dashboard, di.get_stamps())
+p.close()
+p.join()
 
 print("Done!")

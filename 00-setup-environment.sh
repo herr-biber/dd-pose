@@ -6,7 +6,7 @@ if [ -z ${DD_POSE_SOURCED+x} ]; then echo "DD_POSE_SOURCED environment variable 
 # ask for password
 sudo -k
 sudo apt-get update
-sudo apt-get install -y python python-dev python-pip parallel curl coreutils imagemagick mencoder python-opencv python-virtualenv
+sudo apt-get install -y python3 python3-dev python3-pip parallel curl coreutils imagemagick mencoder python3-opencv python3-virtualenv
 
 if [ ! -f $DD_POSE_DIR/venv/bin/activate ]; then
     echo "Setting up new virtualenv"

@@ -1,6 +1,6 @@
 import numpy as np
 import zipfile
-import StringIO
+
 import os
 import json
 import pandas as pd
@@ -70,20 +70,18 @@ class ZipFilePredictor(FilePredictor):
                                                di_dict['humanhash'],\
                                                't-camdriver-head-predictions.json')
         
-        # read predictions json file from within zip file in memory
-        # wrap in StringIO to make file-like object for StampedTransforms
-        sio = StringIO.StringIO(self.zf.read(self.predictions_file))
-
-        try:
-            self.predictions = StampedTransforms(sio)
-        except ValueError as e:
-            e.message = 'File %s is malformed json' % self.predictions_file
-            raise e
+        with self.zf.open(self.predictions_file) as fp:
+            try:
+                self.predictions = StampedTransforms(fp)
+            except ValueError as e:
+                e.message = 'File %s is malformed json' % self.predictions_file
+                raise e
         
-        try:
-            self.metadata = json.loads(self.zf.read('metadata.json'))
-        except:
-            self.metadata = dict()
+        with self.zf.open('metadata.json') as fp:
+            try:
+                self.metadata = json.load(fp)
+            except:
+                self.metadata = dict()
 
 
 class EvaluationData:
