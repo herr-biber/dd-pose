@@ -5,7 +5,8 @@ opencv-python
 imageio
 Pillow
 pandas
-plotly
+plotly>=4.9
+kaleido
 multiprocess
 psutil
 requests

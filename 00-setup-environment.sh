@@ -7,8 +7,6 @@ if [ -z ${DD_POSE_SOURCED+x} ]; then echo "DD_POSE_SOURCED environment variable 
 sudo -k
 sudo apt-get update
 sudo apt-get install -y python python-dev python-pip parallel curl coreutils imagemagick mencoder python-opencv python-virtualenv
-# plotly orca binary dependencies
-sudo apt-get install -y libgtk2.0-0 libgconf-2-4
 
 if [ ! -f $DD_POSE_DIR/venv/bin/activate ]; then
     echo "Setting up new virtualenv"
@@ -20,16 +18,6 @@ pip install pip --upgrade
 pip install setuptools --upgrade # to fix pip install behind proxy
 pip install numpy --upgrade # to fix transformations install
 pip install -r $DD_POSE_DIR/requirements.txt --upgrade
-
-
-# orca for plotly export
-# https://github.com/plotly/orca/releases
-# https://github.com/plotly/orca#linux
-echo "Downloading orca binary..."
-mkdir -p $DD_POSE_DIR/bin
-curl -L https://github.com/plotly/orca/releases/download/v1.2.1/orca-1.2.1-x86_64.AppImage -o $DD_POSE_DIR/bin/orca-1.2.1-x86_64.AppImage
-ln -f -s orca-1.2.1-x86_64.AppImage $DD_POSE_DIR/bin/orca
-chmod +x $DD_POSE_DIR/bin/orca
 
 echo "Done!"
 echo "Make sure you re-source 00-activate.sh to use the virtualenv"

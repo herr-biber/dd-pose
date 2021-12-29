@@ -54,6 +54,6 @@ else
         echo "Virtualenv not setup, yet. Please run 00-setup-environment.sh"
     fi
 
-    echo "Adding $DD_POSE_DIR/bin to \$PATH"
-    export PATH="$DD_POSE_DIR/bin:$PATH"
+    # echo "Adding $DD_POSE_DIR/bin to \$PATH"
+    # export PATH="$DD_POSE_DIR/bin:$PATH"
 fi
