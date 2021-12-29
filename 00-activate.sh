@@ -46,8 +46,10 @@ else
     echo "Adding \$DD_POSE_DIR module to PYTHONPATH"
     export PYTHONPATH="$DD_POSE_DIR:$PYTHONPATH"
 
-    # activate virtualenv
-    if [ -f $DD_POSE_DIR/venv/bin/activate ]; then
+    # activate virtualenv if existing and not within docker environment (which does not use virtualenv)
+    if ! [ -z "$IS_DOCKER" ]; then
+        echo "Within docker environment. Skipping virtualenv."
+    elif [ -f $DD_POSE_DIR/venv/bin/activate ]; then
         echo "Activating virtualenv from $DD_POSE_DIR/venv"
         source $DD_POSE_DIR/venv/bin/activate
     else
