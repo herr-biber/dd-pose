@@ -15,6 +15,7 @@ fi
 source $DD_POSE_DIR/venv/bin/activate
 
 pip3 install pip>=19.3 --upgrade
+pip3 install numpy==1.19.4 --upgrade  # make sure numpy is installed before transformations.py to have proper ABI
 pip3 install -r $DD_POSE_DIR/requirements.txt --upgrade
 
 echo "Done!"
