@@ -44,3 +44,54 @@ class ImageDecorator:
         
     def draw_text(self, text):
         cv2.putText(self.image, text, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1)
+
+    def draw_rect_2d(self, uvwh, color=(0, 0, 0), thickness=1, confidence=1.0):
+        # change color if a confidence is specified
+        if confidence < 1:
+            color = self.saturate_color(color, confidence)
+
+        uvwh = np.array(uvwh).astype(np.int)  # cast
+        pt1 = uvwh[0:2]
+        pt2 = pt1 + uvwh[2:4]
+        pt1, pt2
+
+        assert self.image.data.contiguous, "cv2.rectangle expects contiguous array"
+        cv2.rectangle(self.image, tuple(pt1), tuple(pt2), color, thickness)
+
+    @staticmethod
+    def saturate_color(self, color=(0, 0, 0), value=1):
+        """ changes color intenisty by value
+            value=1 returns color
+            value=0 returns grey hue of matching intensity.
+            with value=0, color (0,0,0) stays black, but (255,255,255) becomes slightly darker.
+
+        """
+        gray = 0.2989 * color[0] + 0.5870 * color[1] + 0.1140 * color[
+            2]  # weights from random forum, aparently CCIR 601 spec.
+        # gray = (color[0] + color[1] + color[2])/3.0 # alternatibve, simpler definition for gray.
+        r = min(int(gray * (1 - value) + color[2] * value), 255)  # r
+        g = min(int(gray * (1 - value) + color[1] * value), 255)  # g
+        b = min(int(gray * (1 - value) + color[0] * value), 255)  # b
+        return (r, g, b)
+
+    def draw_points_3d(self, points, color=(0, 255, 255), size=4, thickness=-1):
+        if self.pcm is None:
+            return
+
+        for p in points:
+            # make sure point is in front of camera
+            if p[2] > 0.0:
+                u, v = self.pcm.project3dToPixel(p)
+                u, v = int(u), int(v)
+                try:
+                    cv2.circle(self.image, (u, v), size, color, thickness) # yellow
+                except OverflowError:
+                    print("Could not draw circle. Waaay outside the image.")
+
+    def draw_points_2d(self, points, color=(0, 255, 255), size=4, thickness=-1):
+        for u, v in points:
+            u, v = int(u), int(v)
+            try:
+                cv2.circle(self.image, (u, v), size, color, thickness)  # yellow
+            except OverflowError:
+                print("Could not draw circle. Waaay outside the image.")
