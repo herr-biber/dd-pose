@@ -8,7 +8,7 @@ class ImageDecorator:
         self.pcm = pcm
         self.axis_length = axis_length # in m
         
-    def draw_axis(self, T_cam_axis, use_gray=False):
+    def draw_axis(self, T_cam_axis, use_gray=False, thickness=3):
         """Draw rgb axis into camera image."""
         if self.pcm is None:
             return
@@ -38,9 +38,9 @@ class ImageDecorator:
             color_z = (255, 0, 0) # b
 
         # draw red on top, as the frontal looking axis X is likyly hiding the other axes
-        cv2.line(self.image, origin_uv, y_uv, color=color_y, thickness=3) # g
-        cv2.line(self.image, origin_uv, z_uv, color=color_z, thickness=3) # b
-        cv2.line(self.image, origin_uv, x_uv, color=color_x, thickness=3) # r
+        cv2.line(self.image, origin_uv, y_uv, color=color_y, thickness=thickness) # g
+        cv2.line(self.image, origin_uv, z_uv, color=color_z, thickness=thickness) # b
+        cv2.line(self.image, origin_uv, x_uv, color=color_x, thickness=thickness) # r
         
     def draw_text(self, text):
         cv2.putText(self.image, text, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1)
