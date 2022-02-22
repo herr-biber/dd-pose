@@ -26,7 +26,7 @@ class PinholeCameraModel:
         Projects 3D point to pixel coordinates (u, v) of the rectified camera image.
         """
         src = numpy.array([point[0], point[1], point[2], 1.0], dtype='float64').reshape((4,1))
-        dst = self.P * src
+        dst = self.P.dot(src)
         x = dst[0,0]
         y = dst[1,0]
         w = dst[2,0]
