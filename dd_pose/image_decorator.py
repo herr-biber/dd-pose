@@ -25,7 +25,7 @@ class ImageDecorator:
         origin_uv, x_uv, y_uv, z_uv = (self.pcm.project3dToPixel(p) for p in (origin_cam, x_cam, y_cam, z_cam))
     
         origin_uv, x_uv, y_uv, z_uv = ((int(u), int(v)) for (u,v) in (origin_uv, x_uv, y_uv, z_uv))
-        origin_uv, x_uv, y_uv, z_uv
+        # origin_uv, x_uv, y_uv, z_uv
 
         # draw lines (BGR), x red, y green, z blue
         if use_gray:
@@ -53,7 +53,7 @@ class ImageDecorator:
         uvwh = np.array(uvwh).astype(np.int)  # cast
         pt1 = uvwh[0:2]
         pt2 = pt1 + uvwh[2:4]
-        pt1, pt2
+        # pt1, pt2
 
         assert self.image.data.contiguous, "cv2.rectangle expects contiguous array"
         cv2.rectangle(self.image, tuple(pt1), tuple(pt2), color, thickness)
