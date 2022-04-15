@@ -279,6 +279,16 @@ class DatasetItem:
             return None
         return (vv['stamp'], vv['gps-heading'])
 
+    def has_img_driver_left_files(self, stamp):
+        if not self.has_stamp(stamp):
+            print("stamp not found")
+            return False
+
+        img_file = os.path.join(self.img_driver_left_dir, '%ld.png' % stamp)
+
+        ci_file = os.path.join(self.img_driver_left_dir, '%ld.json' % stamp)
+        return os.path.isfile(img_file) and os.path.isfile(ci_file)
+
     def get_img_driver_left(self, stamp, shift=True):
         # lazy import
         from dd_pose.pinhole_camera_model_serializer import PinholeCameraModelSerializer
