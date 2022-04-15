@@ -26,6 +26,15 @@ T_camdriver_headfrontal = np.array([
 T_headfrontal_camdriver = np.linalg.inv(T_camdriver_headfrontal)
 
 
+def angle_difference(angle1_rad, angle2_rad):
+    # create resulting signed difference between two angles given in rad
+    # https://stackoverflow.com/a/7869457
+    a = angle1_rad - angle2_rad
+    a = (a + np.pi) % (2 * np.pi) - np.pi
+    return a
+
+
+
 class FilePredictor:
     def __init__(self, predictions_dir, di_dict=None):
         self.predictions_file = os.path.join(predictions_dir,\
@@ -88,7 +97,7 @@ class EvaluationData:
     """
     EvaluationData ground truth and hypotheses in a pandas dataframe.
     
-    It allows to filter to subsets (easy, moderate, hard) and compute metrics.
+    It allows to filtering to subsets (easy, moderate, hard) and compute metrics.
     Correspondence of ground truth and hypotheses is given via integer stamp.
     """
     def __init__(self):
@@ -161,7 +170,7 @@ class EvaluationData:
 
         del eds
         
-        diff = self.df[['gt_x','gt_y', 'gt_z']].values  - self.df[['hypo_x', 'hypo_y', 'hypo_z']].values
+        diff = self.df[['gt_x','gt_y', 'gt_z']].values - self.df[['hypo_x', 'hypo_y', 'hypo_z']].values
         self.df['pos_diff'] = np.linalg.norm(diff, axis=1)
         
     def get_dx(self):
@@ -193,8 +202,10 @@ class EvaluationData:
         return recall
     
     def get_drpy(self):
+        valid_rows = ~self.df.hypo_roll.isna()
         # rad
-        return (self.df[['gt_roll','gt_pitch', 'gt_yaw']].values  - self.df[['hypo_roll', 'hypo_pitch', 'hypo_yaw']]).abs().mean().values
+        return np.abs(angle_difference(self.df[['gt_roll', 'gt_pitch', 'gt_yaw']][valid_rows].values,
+                                       self.df[['hypo_roll', 'hypo_pitch', 'hypo_yaw']][valid_rows].values)).mean(axis=0)
     
     def get_mae(self):
         mae = self.df.angle_diff.mean()
