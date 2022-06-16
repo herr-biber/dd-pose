@@ -35,10 +35,10 @@ class PinholeCameraModelSerializer:
         
         pcm.height = self.camera_info['height']
         pcm.width = self.camera_info['width']
-        pcm.D = np.matrix(self.camera_info['D'])
-        pcm.K = np.matrix(self.camera_info['K'])
-        pcm.R = np.matrix(self.camera_info['R'])
-        pcm.P = np.matrix(self.camera_info['P'])
+        pcm.D = np.asarray(self.camera_info['D'])
+        pcm.K = np.asarray(self.camera_info['K'])
+        pcm.R = np.asarray(self.camera_info['R'])
+        pcm.P = np.asarray(self.camera_info['P'])
         pcm.binning_x = self.camera_info['binning_x']
         pcm.binning_y = self.camera_info['binning_y']
 #        pcm.raw_roi = sensor_msgs.msg.RegionOfInterest()
