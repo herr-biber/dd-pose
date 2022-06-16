@@ -66,6 +66,7 @@ class DatasetItem:
         self.velocity = None
         self.dynamics = None
         self.occlusion_states = None
+        self.driver_left_dont_care_bboxes = None
             
         if is_small_resolution:
             resdir = 'small-resolution'
@@ -92,6 +93,7 @@ class DatasetItem:
         self.load_velocity()
         self.load_dynamics()
         self.load_occlusion_states()
+        self.load_driver_left_dont_care_bboxes()
 
     def load_T_camdriver_head(self):
         T_camdriver_head_file = os.path.join(self.dataset_item_dir, 't-camdriver-head.json')
@@ -183,7 +185,21 @@ class DatasetItem:
             occlusion_states = json.load(fp)
 
         self.occlusion_states = {int(stamp): occlusion_state for stamp, occlusion_state in occlusion_states.items()}
-            
+
+    def load_driver_left_dont_care_bboxes(self):
+        dont_care_bboxes_path = os.path.join(self.dataset_item_dir, 'driver-left-dont-care-bboxes.json')
+        assert os.path.exists(dont_care_bboxes_path)
+        with open(dont_care_bboxes_path) as fp:
+            dont_care_bboxes = json.load(fp)
+
+        dont_care_bboxes = {int(stamp): np.asarray(dont_care_bbox) for stamp, dont_care_bbox in dont_care_bboxes.items()}
+        # dont care boxes are given in full resolution of left image
+        # scale down for small resolution
+        if self.is_small_resolution:
+            dont_care_bboxes = {k: (v / 2.0).astype(int) for k, v in dont_care_bboxes.items()}
+
+        self.driver_left_dont_care_bboxes = dont_care_bboxes
+
     def get_subject(self):
         return self.dataset_item['subject']
 
@@ -199,6 +215,11 @@ class DatasetItem:
         if not stamp in self.occlusion_states:
             return None
         return self.occlusion_states[stamp]
+
+    def get_driver_left_dont_care_bboxes(self, stamp):
+        if self.driver_left_dont_care_bboxes is None:
+            self.load_driver_left_dont_care_bboxes()
+        return self.driver_left_dont_care_bboxes.get(stamp, None)
     
     def has_stamp(self, stamp):
         return stamp in self.stamps
