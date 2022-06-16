@@ -280,14 +280,14 @@ class EvaluationData:
     def new_test_split(self):
         """Test split"""
         ed = EvaluationData()
-        ed.df = self.df[self.df.subject.isin(test_subjects)]
+        ed.df = self.df[self.df.subject.isin(self.test_subjects)]  # TODO
         ed.name = self.name + " test"
         return ed
 
     def new_trainval_split(self):
         """Trainval split"""
         ed = EvaluationData()
-        ed.df = self.df[~self.df.subject.isin(test_subjects)]
+        ed.df = self.df[~self.df.subject.isin(self.test_subjects)]  # TODO
         ed.name = self.name + " trainval"
         return ed
         
@@ -359,7 +359,7 @@ class EvaluationData:
     def get_bmae(self, d=5, k=75):
         """deg!"""
         _, maes_deg = self.get_angle_maes(d, k)
-        count = sum(not np.isnan(mae) for mae in maes_deg) # number on nonempty bins
+        count = sum(not np.isnan(mae) for mae in maes_deg)  # number on nonempty bins
         if count != (k/d):
             print("Warn: empty MAEs when computing BMAE!")
         bmae = 1.0/float(count) * sum(maes_deg)
