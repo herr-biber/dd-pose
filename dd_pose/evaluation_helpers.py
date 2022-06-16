@@ -251,7 +251,7 @@ class EvaluationData:
         ed.name = self.name + " z>=%.2f" % min_z
         if max_z is not None:
             ed.df = ed.df[ed.df.gt_z < max_z]
-            ed.name += " z<%.2f" % max_x
+            ed.name += " z<%.2f" % max_z
         return ed
    
     def new_easy(self):
