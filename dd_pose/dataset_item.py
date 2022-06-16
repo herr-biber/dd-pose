@@ -349,3 +349,6 @@ class DatasetItem:
     def __str__(self):
         s = "DatasetItem(subject=%02d, scenario=%02d, humanhash=%s, len=%d)" % (self.get_subject(), self.get_scenario(), self.get_humanhash(), len(self))
         return s
+
+    def __repr__(self):
+        return str(self)
