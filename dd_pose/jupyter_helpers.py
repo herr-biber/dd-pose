@@ -1,6 +1,7 @@
 import PIL.Image
 import IPython.display
 
+
 def showimage(a):
     """Show an image below the current jupyter notebook cell.
     Expects gray or bgr input (opencv2 default)"""

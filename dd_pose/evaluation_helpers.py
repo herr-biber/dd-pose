@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import zipfile
 
@@ -32,7 +34,6 @@ def angle_difference(angle1_rad, angle2_rad):
     a = angle1_rad - angle2_rad
     a = (a + np.pi) % (2 * np.pi) - np.pi
     return a
-
 
 
 class FilePredictor:
@@ -200,15 +201,23 @@ class EvaluationData:
         else:
             recall = np.nan
         return recall
-    
+
     def get_drpy(self):
+        """
+        Returns np.ndarray 3
+
+        rad.
+        """
         valid_rows = ~self.df.hypo_roll.isna()
+        if not valid_rows.any():
+            return np.full(3, fill_value=np.nan)
         # rad
         return np.abs(angle_difference(self.df[['gt_roll', 'gt_pitch', 'gt_yaw']][valid_rows].values,
                                        self.df[['hypo_roll', 'hypo_pitch', 'hypo_yaw']][valid_rows].values)).mean(axis=0)
     
     def get_mae(self):
-        mae = self.df.angle_diff.mean()
+        """ deg! """
+        mae = np.rad2deg(self.df.angle_diff.mean())
         return mae
     
     def new_by_angle_range(self, angle_rad_min, angle_rad_max):
@@ -270,11 +279,16 @@ class EvaluationData:
         ed.name = self.name + " mod"
         return ed
 
-    def new_hard(self):
+    def new_hard(self, is_full_occlusion=True):
         """Hard subset: angle in [60..inf) or <0.4m, occlusion all types"""
         ed = EvaluationData()
-        ed.df = self.df[(self.df.gt_angle_from_zero >= np.deg2rad(60)) | (self.df.occlusion_state == 'full') | (self.df.occlusion_state == 'full-auto')]
-        ed.name = self.name + " hard"
+        if is_full_occlusion:
+            ed.df = self.df[(self.df.gt_angle_from_zero >= np.deg2rad(60)) | (self.df.occlusion_state == 'full') | (self.df.occlusion_state == 'full-auto')]
+            ed.name = self.name + " hard(full-occl)"
+        else:
+            ed.df = self.df[(self.df.gt_angle_from_zero >= np.deg2rad(60))]
+            ed.name = self.name + " hard(partial-occl)"
+
         return ed
     
     def new_test_split(self):
@@ -293,35 +307,61 @@ class EvaluationData:
         
     def get_angle_recalls(self, d=5, k=75):
         """deg!"""
+        angles_deg = np.array(range(0, k-1, d))
+        recalls = []
+        for angle_deg in angles_deg:
+            recall = self.new_by_angle_range(np.deg2rad(angle_deg), np.deg2rad(angle_deg+d)).get_recall()
+            recalls.append(recall)
+        
+        return angles_deg, recalls
+
+    def get_gt_count(self):
+        return (~self.df.gt_x.isna()).count()
+
+    def get_hypo_count(self):
+        return (~self.df.hypo_x.isna()).count()
+
+    def get_angle_gt_counts(self, d=5, k=75):
         bins = dict()
         for i in range(0, k-1, d):
-            bins[i] = self.new_by_angle_range(np.deg2rad(i), np.deg2rad(i+d)).get_recall()
-        
-        angles, recalls = zip(*[(k,v) for k,v in sorted(bins.items()) if not np.isnan(v)])
+            bins[i] = self.new_by_angle_range(np.deg2rad(i), np.deg2rad(i+d)).get_gt_count()
+
+        angles, counts = zip(*[(k, v) for k, v in sorted(bins.items()) if not np.isnan(v)])
         angles = np.array(angles)
-        return angles, recalls
+        counts = np.array(counts)
+        return angles, counts
+
+    def get_angle_hypo_counts(self, d=5, k=75):
+        bins = dict()
+        for i in range(0, k-1, d):
+            bins[i] = self.new_by_angle_range(np.deg2rad(i), np.deg2rad(i+d)).get_hypo_count()
+
+        angles, counts = zip(*[(k, v) for k, v in sorted(bins.items()) if not np.isnan(v)])
+        angles = np.array(angles)
+        counts = np.array(counts)
+        return angles, counts
 
     def get_angle_maes(self, d=5, k=75):
         """deg!"""
-        bins = dict()
-        for i in range(0, k-1, d):
-            bins[i] = self.new_by_angle_range(np.deg2rad(i), np.deg2rad(i+d)).get_mae()
+        angles_deg = np.array(range(0, k-1, d))
+        maes = []
+        for angle_deg in angles_deg:
+            mae = self.new_by_angle_range(np.deg2rad(angle_deg), np.deg2rad(angle_deg + d)).get_mae()
+            maes.append(mae)
         
-        angles, maes = zip(*[(k,v) for k,v in sorted(bins.items()) if not np.isnan(v)])
-        angles = np.array(angles)
-        maes = np.rad2deg(np.array(maes))
-        return angles, maes
+        maes = np.array(maes)
+        return angles_deg, maes
 
     def get_angle_rpys(self, d=5, k=75):
         """deg!"""
-        bins = dict()
-        for i in range(0, k-1, d):
-            bins[i] = self.new_by_angle_range(np.deg2rad(i), np.deg2rad(i+d)).get_drpy()
+        angles_deg = np.array(range(0, k-1, d))
+        rpys_deg = []
+        for angle_deg in angles_deg:
+            rpy_deg = self.new_by_angle_range(np.deg2rad(angle_deg), np.deg2rad(angle_deg+d)).get_drpy()
+            rpys_deg.append(rpy_deg)
         
-        angles, rpys = zip(*[(k,v) for k,v in sorted(bins.items()) if not np.any(np.isnan(v))])
-        angles = np.array(angles)
-        rpys  = np.rad2deg(np.array(rpys))
-        return angles, rpys
+        rpys_deg  = np.rad2deg(np.array(rpys_deg))
+        return angles_deg, rpys_deg
 
     def get_angle_rolls(self, d=5, k=75):
         """deg!"""
@@ -359,11 +399,15 @@ class EvaluationData:
     def get_bmae(self, d=5, k=75):
         """deg!"""
         _, maes_deg = self.get_angle_maes(d, k)
-        count = sum(not np.isnan(mae) for mae in maes_deg)  # number on nonempty bins
-        if count != (k/d):
-            print("Warn: empty MAEs when computing BMAE!")
-        bmae = 1.0/float(count) * sum(maes_deg)
-        return bmae
+        count = np.count_nonzero(np.isfinite(maes_deg))  # number on nonempty bins
+        if count == 0:
+            print("Warn: no valid MAEs when computing BMAE!")
+            bmae_deg_invalid = np.nan
+            return bmae_deg_invalid
+        if count != (k // d):
+            print("Warn: some empty MAEs when computing BMAE!")
+        bmae_deg = np.nansum(maes_deg) / float(count)
+        return bmae_deg
 
 
 class Plotter:
@@ -373,116 +417,116 @@ class Plotter:
         """
         self.subset_eds = subset_eds
 
-        
-    def get_maes_figure(self):
+    def get_maes_figure(self, layout=None, binsize_deg=5, max_angle_deg=75):
        
         data = []
-        binsize = 5
+        binsize = binsize_deg
 
         for name, ed in self.subset_eds.items():
-            x, y = ed.get_angle_maes(d=binsize)
+            x, y = ed.get_angle_maes(d=binsize, k=max_angle_deg)
             x = x + float(binsize)/2.0
             data.append(go.Scatter(x=x, y=y, name=name))
 
-        layout = go.Layout(
-            xaxis=dict(
-                title='angle from frontal (deg), binsize = %d deg' % binsize,
-                nticks=16, # or tickvals,
-                titlefont=dict(
-                    family='serif',
-                    size=35,
-                ),
-                tickfont=dict(
-                    family='serif',
-                    size=30
-                )
+        if layout is None:
+            layout = go.Layout(
+                xaxis=dict(
+                    title='angle from frontal (deg), binsize = %d deg' % binsize,
+                    nticks=16, # or tickvals,
+                    titlefont=dict(
+                        family='serif',
+                        size=35,
+                    ),
+                    tickfont=dict(
+                        family='serif',
+                        size=30
+                    )
 
-            ),
-            yaxis=dict(
-                title='MAE within bin (deg)',
-                titlefont=dict(
-                    family='serif',
-                    size=35,
                 ),
-                tickfont=dict(
-                    family='serif',
-                    size=30
+                yaxis=dict(
+                    title='MAE within bin (deg)',
+                    titlefont=dict(
+                        family='serif',
+                        size=35,
+                    ),
+                    tickfont=dict(
+                        family='serif',
+                        size=30
+                    ),
+                    range=[-0.1,40]
                 ),
-                range=[-0.1,70]
-            ),
-            margin=dict(l=80, r=0, t=10, b=85),
-            legend=dict(
-                x=0.05,
-                y=0.95,
-                font=dict(
-                    family='serif',
-                    size=30,
-                ),
-                borderwidth=1
+                margin=dict(l=80, r=0, t=10, b=85),
+                legend=dict(
+                    x=0.05,
+                    y=0.95,
+                    font=dict(
+                        family='serif',
+                        size=30,
+                    ),
+                    borderwidth=1
+                )
             )
-        )
         fig = go.Figure(data=data, layout=layout)
         return fig
             
-        
-    def get_recalls_figure(self):
+    def get_recalls_figure(self, layout=None, binsize_deg=5, max_angle_deg=75):
         data = []
-        binsize = 5
+        binsize = binsize_deg
+        max_angle = max_angle_deg
 
         for name, ed in self.subset_eds.items():
-            x, y = ed.get_angle_recalls(d=binsize)
+            x, y = ed.get_angle_recalls(d=binsize, k=max_angle)
             x = x + float(binsize)/2.0
             data.append(go.Scatter(x=x, y=y, name=name))
 
-        layout = go.Layout(
-            xaxis=dict(
-                title='angle from frontal (deg), binsize = %d deg' % binsize,
-                nticks=16,
-                titlefont=dict(
-                    family='serif',
-                    size=35,
+        if layout is None:
+            layout = go.Layout(
+                xaxis=dict(
+                    title='angle from frontal (deg), binsize = %d deg' % binsize,
+                    nticks=16,
+                    titlefont=dict(
+                        family='serif',
+                        size=35,
+                    ),
+                    tickfont=dict(
+                        family='serif',
+                        size=30
+                    )
                 ),
-                tickfont=dict(
-                    family='serif',
-                    size=30
-                )   
-            ),
-            yaxis=dict(
-                title='recall within bin',
-                titlefont=dict(
-                    family='serif',
-                    size=35,
+                yaxis=dict(
+                    title='recall within bin',
+                    titlefont=dict(
+                        family='serif',
+                        size=35,
+                    ),
+                    tickfont=dict(
+                        family='serif',
+                        size=30
+                    ),
+                    range=[-0.01,1.05]
                 ),
-                tickfont=dict(
-                    family='serif',
-                    size=30
-                ),
-                range=[-0.01,1.05]
-            ),
-            margin=dict(l=80, r=0, t=10, b=85),
-            legend=dict(
-                x=0.87,
-                y=0.92,
-        #         x=0.04,
-        #         y=0.03,
+                margin=dict(l=80, r=0, t=10, b=85),
+                legend=dict(
+                    x=0.87,
+                    y=0.92,
+            #         x=0.04,
+            #         y=0.03,
 
-                font=dict(
-                    family='serif',
-                    size=25,
-                ),
-                borderwidth=1,
-        #         bgcolor = 'rgba(255,255,255,0.3)'  #transparent bg
+                    font=dict(
+                        family='serif',
+                        size=25,
+                    ),
+                    borderwidth=1,
+            #         bgcolor = 'rgba(255,255,255,0.3)'  #transparent bg
+                )
             )
-        )
         fig = go.Figure(data=data, layout=layout)
         return fig
 
-
-    def get_rpys_figure(self):
+    def get_rpys_figure(self, layout=None, binsize_deg=5):
        
         # mae for RPY
         data = []
-        binsize = 5
+        binsize = binsize_deg
 
         for name, ed in self.subset_eds.items():
             x, y = ed.get_angle_rpys(d=binsize)
@@ -491,11 +535,59 @@ class Plotter:
             data.append(go.Scatter(x=x, y=y[:,1], name=name + ' pitch'))
             data.append(go.Scatter(x=x, y=y[:,2], name=name + ' yaw'))
 
+        if layout is None:
+            layout = go.Layout(
+                xaxis=dict(
+                    title='angle from frontal (deg), binsize = %d deg' % binsize,
+                    nticks=16, # or tickvals,
+                    titlefont=dict(
+                        family='serif',
+                        size=35,
+                    ),
+                    tickfont=dict(
+                        family='serif',
+                        size=30
+                    )
 
+                ),
+                yaxis=dict(
+                    title='MAE within bin (deg)',
+                    titlefont=dict(
+                        family='serif',
+                        size=35,
+                    ),
+                    tickfont=dict(
+                        family='serif',
+                        size=30
+                    ),
+                    range=[-0.1,70]
+                ),
+                margin=dict(l=80, r=0, t=10, b=85),
+                legend=dict(
+                    x=0.05,
+                    y=0.95,
+                    font=dict(
+                        family='serif',
+                        size=30,
+                    ),
+                    borderwidth=1
+                )
+            )
+        fig = go.Figure(data=data, layout=layout)
+        return fig
+
+    def get_counts_figure(self):
+        data = []
+        binsize = 5
+
+        for name, ed in self.subset_eds.items():
+            bin_lefts, counts = ed.get_angle_gt_counts(d=binsize)
+            bin_centers = bin_lefts + float(binsize) / 2.0
+            data.append(go.Bar(x=bin_centers, y=counts, name=name))
         layout = go.Layout(
             xaxis=dict(
                 title='angle from frontal (deg), binsize = %d deg' % binsize,
-                nticks=16, # or tickvals,
+                #         nticks=16, # or tickvals,
                 titlefont=dict(
                     family='serif',
                     size=35,
@@ -504,23 +596,21 @@ class Plotter:
                     family='serif',
                     size=30
                 )
-
             ),
             yaxis=dict(
-                title='MAE within bin (deg)',
+                title="number of ground truth samples",
                 titlefont=dict(
                     family='serif',
-                    size=35,
+                    size=25,
                 ),
                 tickfont=dict(
                     family='serif',
                     size=30
                 ),
-                range=[-0.1,70]
             ),
             margin=dict(l=80, r=0, t=10, b=85),
             legend=dict(
-                x=0.05,
+                x=0.60,
                 y=0.95,
                 font=dict(
                     family='serif',
