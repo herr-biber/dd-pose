@@ -189,12 +189,16 @@ class EvaluationData:
         """    
         return abs(self.df.pos_diff).mean()
     
-    def get_recall(self):
+    def get_recall(self, is_treat_full_occlusion_as_pos_gt: bool = False):
         """
         Get recall, i.e. ratio of available predictions and ground truth measurements.
         """
-        n_gt =  self.df.gt_x.count()
-        n_pos = self.df[~self.df.gt_x.isna()].hypo_x.count()
+        # ignore invalid frames (no gt)
+        df = self.df[~self.df.gt_x.isna()]
+        if not is_treat_full_occlusion_as_pos_gt:
+            df = df[df.occlusion_state != "full"]
+        n_gt = df.gt_x.count()
+        n_pos = df.hypo_x.count()
 
         if n_gt > 0:
             recall = float(n_pos)/n_gt
