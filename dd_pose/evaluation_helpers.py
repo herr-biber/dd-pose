@@ -175,19 +175,19 @@ class EvaluationData:
         self.df['pos_diff'] = np.linalg.norm(diff, axis=1)
         
     def get_dx(self):
-        return abs((self.df.hypo_x - self.df.gt_x)).mean()
+        return abs((self.df.hypo_x - self.df.gt_x)).mean(skipna=True)
 
     def get_dy(self):
-        return abs((self.df.hypo_y - self.df.gt_y)).mean()
+        return abs((self.df.hypo_y - self.df.gt_y)).mean(skipna=True)
 
     def get_dz(self):
-        return abs((self.df.hypo_z - self.df.gt_z)).mean()
+        return abs((self.df.hypo_z - self.df.gt_z)).mean(skipna=True)
 
     def get_dxyz(self):
         """
         Get mean absoulte L2 distance.
         """    
-        return abs(self.df.pos_diff).mean()
+        return abs(self.df.pos_diff).mean(skipna=True)
     
     def get_recall(self, is_treat_full_occlusion_as_pos_gt: bool = False):
         """
@@ -221,7 +221,7 @@ class EvaluationData:
     
     def get_mae(self):
         """ deg! """
-        mae = np.rad2deg(self.df.angle_diff.mean())
+        mae = np.rad2deg(self.df.angle_diff.mean(skipna=True))
         return mae
     
     def new_by_angle_range(self, angle_rad_min, angle_rad_max):
