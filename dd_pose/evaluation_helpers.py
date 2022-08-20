@@ -345,9 +345,10 @@ class EvaluationData:
         counts = np.array(counts)
         return angles, counts
 
-    def get_angle_maes(self, d=5, k=75):
+    def get_angle_maes(self, d=5, k=75, k_min=0):
         """deg!"""
-        angles_deg = np.array(range(0, k-1, d))
+        assert k_min % d == 0
+        angles_deg = np.array(range(k_min, k-1, d))
         maes = []
         for angle_deg in angles_deg:
             mae = self.new_by_angle_range(np.deg2rad(angle_deg), np.deg2rad(angle_deg + d)).get_mae()
@@ -400,15 +401,17 @@ class EvaluationData:
         rpys  = np.rad2deg(np.array(rpys))
         return angles, rpys[:,2] # YAW
 
-    def get_bmae(self, d=5, k=75):
+    def get_bmae(self, d=5, k=75, k_min=0):
         """deg!"""
-        _, maes_deg = self.get_angle_maes(d, k)
+        assert k_min % d == 0
+        assert k % d == 0
+        _, maes_deg = self.get_angle_maes(d, k, k_min=k_min)
         count = np.count_nonzero(np.isfinite(maes_deg))  # number on nonempty bins
         if count == 0:
             print("Warn: no valid MAEs when computing BMAE!")
             bmae_deg_invalid = np.nan
             return bmae_deg_invalid
-        if count != (k // d):
+        if count != ((k - k_min) // d):
             print("Warn: some empty MAEs when computing BMAE!")
         bmae_deg = np.nansum(maes_deg) / float(count)
         return bmae_deg
