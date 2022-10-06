@@ -424,20 +424,29 @@ class Plotter:
         """
         self.subset_eds = subset_eds
 
+        # https://plotly.com/python/discrete-color/#color-sequences-in-plotly-express
+        # blue, red, green, violet, orange, lightblue, ...
+        # colors = ['#636efa', '#EF553B', '#00cc96', '#ab63fa', '#FFA15A', '#19d3f3', '#FF6692',
+        #           '#B6E880', '#FF97FF', '#FECB52']
+        # juggled a little
+        # blue, green, violet, orange, red, ...
+        self.colors = ['#636efa', '#00cc96', '#ab63fa', '#FFA15A', '#EF553B', '#19d3f3', '#FF6692',
+                  '#B6E880', '#FF97FF', '#FECB52']
+
     def get_maes_figure(self, layout=None, binsize_deg=5, max_angle_deg=75):
        
         data = []
         binsize = binsize_deg
 
-        for name, ed in self.subset_eds.items():
+        for i, (name, ed) in enumerate(self.subset_eds.items()):
             x, y = ed.get_angle_maes(d=binsize, k=max_angle_deg)
             x = x + float(binsize)/2.0
-            data.append(go.Scatter(x=x, y=y, name=name))
+            data.append(go.Scatter(x=x, y=y, name=name, mode='lines+markers', marker_color=self.colors[i]))
 
         if layout is None:
             layout = go.Layout(
                 xaxis=dict(
-                    title='angle from frontal (deg), binsize = %d deg' % binsize,
+                    title='angle from frontal (&deg;), binsize = %d&deg;' % binsize,
                     nticks=16, # or tickvals,
                     titlefont=dict(
                         family='serif',
@@ -450,7 +459,7 @@ class Plotter:
 
                 ),
                 yaxis=dict(
-                    title='MAE within bin (deg)',
+                    title='MAE<sub>R</sub> within bin (&deg;)',
                     titlefont=dict(
                         family='serif',
                         size=35,
@@ -459,7 +468,7 @@ class Plotter:
                         family='serif',
                         size=30
                     ),
-                    range=[-0.1,40]
+                    range=[0,40]
                 ),
                 margin=dict(l=80, r=0, t=10, b=85),
                 legend=dict(
@@ -467,7 +476,7 @@ class Plotter:
                     y=0.95,
                     font=dict(
                         family='serif',
-                        size=30,
+                        size=25,
                     ),
                     borderwidth=1
                 )
@@ -480,15 +489,15 @@ class Plotter:
         binsize = binsize_deg
         max_angle = max_angle_deg
 
-        for name, ed in self.subset_eds.items():
+        for i, (name, ed) in enumerate(self.subset_eds.items()):
             x, y = ed.get_angle_recalls(d=binsize, k=max_angle)
             x = x + float(binsize)/2.0
-            data.append(go.Scatter(x=x, y=y, name=name))
+            data.append(go.Scatter(x=x, y=y, name=name, mode='lines+markers', marker_color=self.colors[i]))
 
         if layout is None:
             layout = go.Layout(
                 xaxis=dict(
-                    title='angle from frontal (deg), binsize = %d deg' % binsize,
+                    title='angle from frontal (&deg;), binsize = %d&deg;' % binsize,
                     nticks=16,
                     titlefont=dict(
                         family='serif',
@@ -529,23 +538,23 @@ class Plotter:
         fig = go.Figure(data=data, layout=layout)
         return fig
 
-    def get_rpys_figure(self, layout=None, binsize_deg=5):
+    def get_rpys_figure(self, layout=None, binsize_deg=5, max_angle_deg=75):
        
         # mae for RPY
         data = []
         binsize = binsize_deg
 
         for name, ed in self.subset_eds.items():
-            x, y = ed.get_angle_rpys(d=binsize)
+            x, y = ed.get_angle_rpys(d=binsize, k=max_angle_deg)
             x = x + float(binsize)/2.0
-            data.append(go.Scatter(x=x, y=y[:,0], name=name + ' roll'))
-            data.append(go.Scatter(x=x, y=y[:,1], name=name + ' pitch'))
-            data.append(go.Scatter(x=x, y=y[:,2], name=name + ' yaw'))
+            data.append(go.Scatter(x=x, y=y[:, 0], name=name + ' r', mode='lines+markers'))
+            data.append(go.Scatter(x=x, y=y[:, 1], name=name + ' p', mode='lines+markers'))
+            data.append(go.Scatter(x=x, y=y[:, 2], name=name + ' y', mode='lines+markers'))
 
         if layout is None:
             layout = go.Layout(
                 xaxis=dict(
-                    title='angle from frontal (deg), binsize = %d deg' % binsize,
+                    title='angle from frontal (&deg;), binsize = %d&deg;' % binsize,
                     nticks=16, # or tickvals,
                     titlefont=dict(
                         family='serif',
@@ -558,7 +567,7 @@ class Plotter:
 
                 ),
                 yaxis=dict(
-                    title='MAE within bin (deg)',
+                    title='MAE<sub>R</sub> within bin (deg)',
                     titlefont=dict(
                         family='serif',
                         size=35,
@@ -575,7 +584,7 @@ class Plotter:
                     y=0.95,
                     font=dict(
                         family='serif',
-                        size=30,
+                        size=25,
                     ),
                     borderwidth=1
                 )
@@ -583,17 +592,16 @@ class Plotter:
         fig = go.Figure(data=data, layout=layout)
         return fig
 
-    def get_counts_figure(self):
-        data = []
-        binsize = 5
-
-        for name, ed in self.subset_eds.items():
-            bin_lefts, counts = ed.get_angle_gt_counts(d=binsize)
-            bin_centers = bin_lefts + float(binsize) / 2.0
-            data.append(go.Bar(x=bin_centers, y=counts, name=name))
+    def get_counts_figure(self, binsize=5, max_angle=75):
+        name = "# samples"
+        # just take first ed (since data distribution is the same for all
+        ed = next(iter(self.subset_eds.values()))
+        bin_lefts, counts = ed.get_angle_gt_counts(d=binsize, k=max_angle)
+        bin_centers = bin_lefts + float(binsize) / 2.0
+        data = go.Bar(x=bin_centers, y=counts, name=name)
         layout = go.Layout(
             xaxis=dict(
-                title='angle from frontal (deg), binsize = %d deg' % binsize,
+                title='angle from frontal (&deg;), binsize = %d&deg;' % binsize,
                 #         nticks=16, # or tickvals,
                 titlefont=dict(
                     family='serif',
@@ -605,7 +613,7 @@ class Plotter:
                 )
             ),
             yaxis=dict(
-                title="number of ground truth samples",
+                title="# samples",
                 titlefont=dict(
                     family='serif',
                     size=25,
@@ -621,7 +629,7 @@ class Plotter:
                 y=0.95,
                 font=dict(
                     family='serif',
-                    size=30,
+                    size=25,
                 ),
                 borderwidth=1
             )
