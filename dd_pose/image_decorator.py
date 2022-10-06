@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 
+
 class ImageDecorator:
     def __init__(self, image, pcm, axis_length=0.1):
         assert image.shape[2] == 3
@@ -12,6 +13,13 @@ class ImageDecorator:
         """Draw rgb axis into camera image."""
         if self.pcm is None:
             return
+
+        # allow to misuse param for color
+        if isinstance(use_gray, bool):
+            color_gray = (127, 127, 127)
+        else:
+            assert len(use_gray) == 3
+            color_gray = use_gray
 
         origin_axis = np.array([0.0, 0.0, 0.0, 1.0])
         x_axis = np.array([self.axis_length, 0.0, 0.0, 1.0])
@@ -29,18 +37,18 @@ class ImageDecorator:
 
         # draw lines (BGR), x red, y green, z blue
         if use_gray:
-            color_x = (127, 127, 127)
-            color_y = (127, 127, 127)
-            color_z = (127, 127, 127)
+            color_x = color_gray
+            color_y = color_gray
+            color_z = color_gray
         else:
-            color_x = (0, 0, 255) # r
-            color_y = (0, 255, 0) # g
-            color_z = (255, 0, 0) # b
+            color_x = (0, 0, 255)  # r
+            color_y = (0, 255, 0)  # g
+            color_z = (255, 0, 0)  # b
 
-        # draw red on top, as the frontal looking axis X is likyly hiding the other axes
-        cv2.line(self.image, origin_uv, y_uv, color=color_y, thickness=thickness) # g
-        cv2.line(self.image, origin_uv, z_uv, color=color_z, thickness=thickness) # b
-        cv2.line(self.image, origin_uv, x_uv, color=color_x, thickness=thickness) # r
+        # draw red on top, as the frontal looking axis X is likely hiding the other axes
+        cv2.line(self.image, origin_uv, y_uv, color=color_y, thickness=thickness)  # g
+        cv2.line(self.image, origin_uv, z_uv, color=color_z, thickness=thickness)  # b
+        cv2.line(self.image, origin_uv, x_uv, color=color_x, thickness=thickness)  # r
         
     def draw_text(self, text):
         cv2.putText(self.image, text, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1)
@@ -59,8 +67,8 @@ class ImageDecorator:
         cv2.rectangle(self.image, tuple(pt1), tuple(pt2), color, thickness)
 
     @staticmethod
-    def saturate_color(self, color=(0, 0, 0), value=1):
-        """ changes color intenisty by value
+    def saturate_color(color=(0, 0, 0), value=1.0):
+        """ changes color intensity by value
             value=1 returns color
             value=0 returns grey hue of matching intensity.
             with value=0, color (0,0,0) stays black, but (255,255,255) becomes slightly darker.
@@ -68,7 +76,7 @@ class ImageDecorator:
         """
         gray = 0.2989 * color[0] + 0.5870 * color[1] + 0.1140 * color[
             2]  # weights from random forum, aparently CCIR 601 spec.
-        # gray = (color[0] + color[1] + color[2])/3.0 # alternatibve, simpler definition for gray.
+        # gray = (color[0] + color[1] + color[2])/3.0 # alternative, simpler definition for gray.
         r = min(int(gray * (1 - value) + color[2] * value), 255)  # r
         g = min(int(gray * (1 - value) + color[1] * value), 255)  # g
         b = min(int(gray * (1 - value) + color[0] * value), 255)  # b
