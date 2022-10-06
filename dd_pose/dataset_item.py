@@ -1,5 +1,7 @@
 import os
 import json
+import warnings
+
 import numpy as np
 import imageio
 
@@ -101,7 +103,7 @@ class DatasetItem:
             with open(T_camdriver_head_file) as fp:
                 self.T_camdriver_head_transforms = StampedTransforms(fp, transform_name=None)
             if self.is_test:
-                print("WW: working with test set which has head pose measurements")
+                warnings.warn("WW: working with test set which has head pose measurements")
         else:
             self.T_camdriver_head_transforms = StampedTransforms()
             assert self.is_test, "head pose measurements not found. did you run 04-untar.sh?"
@@ -188,7 +190,11 @@ class DatasetItem:
 
     def load_driver_left_dont_care_bboxes(self):
         dont_care_bboxes_path = os.path.join(self.dataset_item_dir, 'driver-left-dont-care-bboxes.json')
-        assert os.path.exists(dont_care_bboxes_path)
+        if not os.path.exists(dont_care_bboxes_path):
+            warnings.warn("don't care boxes file does no exist. Not ignoring any boxes.")
+            self.driver_left_dont_care_bboxes = dict()  # empty
+            return
+
         with open(dont_care_bboxes_path) as fp:
             dont_care_bboxes = json.load(fp)
 
