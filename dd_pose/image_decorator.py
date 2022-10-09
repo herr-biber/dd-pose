@@ -50,8 +50,10 @@ class ImageDecorator:
         cv2.line(self.image, origin_uv, z_uv, color=color_z, thickness=thickness)  # b
         cv2.line(self.image, origin_uv, x_uv, color=color_x, thickness=thickness)  # r
         
-    def draw_text(self, text):
-        cv2.putText(self.image, text, (20, 20), cv2.FONT_HERSHEY_PLAIN, 1, (255, 0, 0), 1)
+    def draw_text(self, text, **cv2_putText_kwargs):
+        kwargs = dict(org=(20, 20), fontFace=cv2.FONT_HERSHEY_PLAIN, fontScale=1, color=(255, 0, 0), thickness=1)
+        kwargs.update(cv2_putText_kwargs)
+        cv2.putText(self.image, text=text, **kwargs)
 
     def draw_rect_2d(self, uvwh, color=(0, 0, 0), thickness=1, confidence=1.0):
         # change color if a confidence is specified

@@ -108,7 +108,6 @@ class DatasetItem:
             self.T_camdriver_head_transforms = StampedTransforms()
             assert self.is_test, "head pose measurements not found. did you run 04-untar.sh?"
 
-
     def load_static_transforms(self):
         static_transforms_path = os.path.join(self.dataset_item_dir, 'static-transforms.json')
         assert os.path.exists(static_transforms_path)
