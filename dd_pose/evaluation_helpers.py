@@ -1,5 +1,6 @@
 import warnings
 
+import math
 import numpy as np
 import zipfile
 
@@ -34,6 +35,40 @@ def angle_difference(angle1_rad, angle2_rad):
     a = angle1_rad - angle2_rad
     a = (a + np.pi) % (2 * np.pi) - np.pi
     return a
+
+
+def angle_from_matrix(matrix, eps=1e-8):
+    """Return rotation angle from rotation matrix.
+
+    Adapted from https://github.com/davheld/tf/blob/master/src/tf/transformations.py
+    with larger eps (and removed direction and point computation).
+
+    Additionally removed eigenvalue==1 check and used eigenvalue closest to 1.
+
+    Args:
+        matrix: 3x3 numpy array rotation matrix
+        eps: epsilon to use for numeric comparisons
+
+    Returns
+        Rotation angle in radians
+    """
+    R = np.array(matrix, dtype=np.float64, copy=False)
+    R33 = R[:3, :3]
+    # direction: unit eigenvector of R33 corresponding to eigenvalue of 1
+    l, W = np.linalg.eig(R33.T)
+    index_with_eigenvalue_close_to_one = np.argmin(abs(np.real(l) - 1.0))
+    direction = np.real(W[:, index_with_eigenvalue_close_to_one]).squeeze()
+
+    cosa = (np.trace(R33) - 1.0) / 2.0
+    if abs(direction[2]) > eps:
+        sina = (R[1, 0] + (cosa-1.0)*direction[0]*direction[1]) / direction[2]
+    elif abs(direction[1]) > eps:
+        sina = (R[0, 2] + (cosa-1.0)*direction[0]*direction[2]) / direction[1]
+    else:
+        sina = (R[2, 1] + (cosa-1.0)*direction[1]*direction[2]) / direction[0]
+    angle = math.atan2(sina, cosa)
+    return abs(angle)
+
 
 
 class FilePredictor:
@@ -121,7 +156,7 @@ class EvaluationData:
             self.df.at[stamp, 'gt_roll'], self.df.at[stamp, 'gt_pitch'], self.df.at[stamp, 'gt_yaw'] = tr.euler_from_matrix(T_headfrontal_head)
             self.df.at[stamp, 'gt_x'], self.df.at[stamp, 'gt_y'], self.df.at[stamp, 'gt_z'] = T_camdriver_head[0:3,3]
             
-            gt_angle_from_zero, _, _ = tr.rotation_from_matrix(T_headfrontal_head)
+            gt_angle_from_zero = angle_from_matrix(T_headfrontal_head)
             self.df.at[stamp, 'gt_angle_from_zero'] = abs(gt_angle_from_zero)
 
             self.df.at[stamp, 'occlusion_state'] = di.get_occlusion_state(stamp)
@@ -137,8 +172,8 @@ class EvaluationData:
                 self.df.at[stamp, 'hypo_z'] = None
             else:
                 self.df.at[stamp, 'hypo_roll'], self.df.at[stamp, 'hypo_pitch'], self.df.at[stamp, 'hypo_yaw'] = tr.euler_from_matrix(hypo_T_headfrontal_head)
-
-                angle_difference, _, _ = tr.rotation_from_matrix(tr.inverse_matrix(T_headfrontal_head).dot(hypo_T_headfrontal_head))
+                T_gt_hypo = tr.inverse_matrix(T_headfrontal_head).dot(hypo_T_headfrontal_head)
+                angle_difference = angle_from_matrix(T_gt_hypo)  # rad
                 self.df.at[stamp, 'angle_diff'] = abs(angle_difference)
 
                 self.df.at[stamp, 'hypo_x'], self.df.at[stamp, 'hypo_y'], self.df.at[stamp, 'hypo_z'] = predictor.get_t_camdriver_head(stamp)
