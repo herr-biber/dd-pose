@@ -9,6 +9,7 @@ import json
 import pandas as pd
 import transformations as tr
 from multiprocess import Pool
+import logging
 
 import plotly
 import plotly.graph_objs as go
@@ -114,19 +115,27 @@ class ZipFilePredictor(FilePredictor):
                                                'scenario-%02d' % di_dict['scenario'],\
                                                di_dict['humanhash'],\
                                                't-camdriver-head-predictions.json')
+
+        if self.predictions_file not in self.zf.namelist():
+            logging.warning("File %s not in zipfile", self.predictions_file)
+            self.predictions = StampedTransforms(fp=None)
+        else:
+            with self.zf.open(self.predictions_file) as fp:
+                try:
+                    self.predictions = StampedTransforms(fp)
+                except ValueError as e:
+                    e.message = 'File %s is malformed json' % self.predictions_file
+                    raise e
         
-        with self.zf.open(self.predictions_file) as fp:
-            try:
-                self.predictions = StampedTransforms(fp)
-            except ValueError as e:
-                e.message = 'File %s is malformed json' % self.predictions_file
-                raise e
-        
-        with self.zf.open('metadata.json') as fp:
-            try:
-                self.metadata = json.load(fp)
-            except:
-                self.metadata = dict()
+        if 'metadata.json' not in self.zf.namelist():
+            logging.warning("File metadata.json not in zipfile")
+            self.metadata = dict()
+        else:
+            with self.zf.open('metadata.json') as fp:
+                try:
+                    self.metadata = json.load(fp)
+                except:
+                    self.metadata = dict()
 
 
 class EvaluationData:
