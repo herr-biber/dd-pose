@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 import dd_pose.dataset
 import dd_pose.dataset_item

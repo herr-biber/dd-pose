@@ -189,7 +189,7 @@ class EvaluationData:
         """    
         return abs(self.df.pos_diff).mean(skipna=True)
     
-    def get_recall(self, is_treat_full_occlusion_as_pos_gt: bool = False):
+    def get_recall(self, is_treat_full_occlusion_as_pos_gt=False):
         """
         Get recall, i.e. ratio of available predictions and ground truth measurements.
         """

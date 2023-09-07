@@ -6,7 +6,7 @@ if [ -z ${DD_POSE_SOURCED+x} ]; then echo "DD_POSE_SOURCED environment variable 
 # ask for password
 sudo -k
 sudo apt-get update
-sudo apt-get install -y python3 python3-dev python3-pip parallel curl coreutils imagemagick mencoder python3-virtualenv
+sudo apt-get install -y python python-dev python-pip parallel curl coreutils imagemagick mencoder python-virtualenv
 
 if [ ! -f $DD_POSE_DIR/venv/bin/activate ]; then
     echo "Setting up new virtualenv"
@@ -14,9 +14,9 @@ if [ ! -f $DD_POSE_DIR/venv/bin/activate ]; then
 fi
 source $DD_POSE_DIR/venv/bin/activate
 
-pip3 install pip>=19.3 --upgrade
-pip3 install numpy==1.19.4 --upgrade  # make sure numpy is installed before transformations.py to have proper ABI
-pip3 install -r $DD_POSE_DIR/requirements.txt --upgrade
+pip install pip==20.0.2 --upgrade
+pip install numpy==1.16.6 --upgrade  # make sure numpy is installed before transformations.py to have proper ABI
+pip install -r $DD_POSE_DIR/requirements-py27.txt --upgrade
 
 echo "Done!"
 echo "Make sure you re-source 00-activate.sh to use the virtualenv"

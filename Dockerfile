@@ -1,16 +1,13 @@
-FROM ubuntu:20.04
+FROM python:2.7-slim
 
-ENV TZ=Europe/Berlin
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
-
-RUN apt-get update && apt-get install -y \
-    python3 \
-    python3-dev \
-    python3-pip \
-    parallel \
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --no-install-suggests -y \
     curl \
+    gcc \
+    libc-dev \
     imagemagick \
     mencoder \
+    parallel \
+    && apt-get purge -y --auto-remove \
     && rm -rf /var/lib/apt/lists/*
 
 ENV IS_DOCKER=1
@@ -18,10 +15,9 @@ ENV DD_POSE_DIR=/dd-pose
 RUN mkdir -p $DD_POSE_DIR
 WORKDIR $DD_POSE_DIR
 
-COPY requirements.txt $DD_POSE_DIR
+COPY requirements-py27.txt $DD_POSE_DIR
 
-RUN pip3 install --no-cache-dir pip>=19.3 --upgrade
-RUN pip3 install --no-cache-dir -r $DD_POSE_DIR/requirements.txt --upgrade
+RUN pip install --no-cache-dir -r $DD_POSE_DIR/requirements-py27.txt
 
 COPY 00-activate.sh $DD_POSE_DIR
 
