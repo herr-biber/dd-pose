@@ -145,10 +145,12 @@ class EvaluationData:
     It allows to filtering to subsets (easy, moderate, hard) and compute metrics.
     Correspondence of ground truth and hypotheses is given via integer stamp.
     """
-    def __init__(self):
+    def __init__(self, is_ignore_full_occlusion=True):
         self.df = pd.DataFrame()
         self.df.index.name = 'stamp'
         self.name = ""
+        self.is_ignore_full_occlusion = is_ignore_full_occlusion
+
         self.test_timestamps_wihout_images = {
             1540223383838000000,
             1540223395535000000,
@@ -240,6 +242,10 @@ class EvaluationData:
             if stamp in self.test_timestamps_wihout_images:
                 continue
 
+            occlusion_state = di.get_occlusion_state(stamp)
+            if self.is_ignore_full_occlusion and occlusion_state in {'full', 'full-auto'}:
+                continue
+
             T_camdriver_head = di.get_T_camdriver_head(stamp)
             
             assert T_camdriver_head is not None
@@ -251,7 +257,7 @@ class EvaluationData:
             gt_angle_from_zero = angle_from_matrix(T_headfrontal_head)
             self.df.at[stamp, 'gt_angle_from_zero'] = abs(gt_angle_from_zero)
 
-            self.df.at[stamp, 'occlusion_state'] = di.get_occlusion_state(stamp)
+            self.df.at[stamp, 'occlusion_state'] = occlusion_state
             
             hypo_T_headfrontal_head = predictor.get_T_headfrontal_head(stamp)
             if hypo_T_headfrontal_head is None:
@@ -316,14 +322,12 @@ class EvaluationData:
         """    
         return abs(self.df.pos_diff).mean(skipna=True)
     
-    def get_recall(self, is_treat_full_occlusion_as_pos_gt=False):
+    def get_recall(self):
         """
         Get recall, i.e. ratio of available predictions and ground truth measurements.
         """
         # ignore invalid frames (no gt)
         df = self.df[~self.df.gt_x.isna()]
-        if not is_treat_full_occlusion_as_pos_gt:
-            df = df[df.occlusion_state != "full"]
         n_gt = df.gt_x.count()
         n_pos = df.hypo_x.count()
 
