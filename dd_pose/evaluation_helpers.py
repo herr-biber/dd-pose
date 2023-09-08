@@ -278,6 +278,9 @@ class EvaluationData:
 
 #                 print gt_angle_from_zero, angle_difference, np.rad2deg(angle_difference), position_difference
 
+        # Remove rows with nondefined occlusion state.
+        self.df = self.df[~self.df.occlusion_state.isna()]
+
 
     @staticmethod
     def load_evaluation_data(di_dict, predictor_class, predictor_kwargs):
@@ -537,6 +540,7 @@ class EvaluationData:
         assert k_min % d == 0
         assert k % d == 0
         _, maes_deg = self.get_angle_maes(d, k, k_min=k_min)
+        print(maes_deg)
         count = np.count_nonzero(np.isfinite(maes_deg))  # number on nonempty bins
         if count == 0:
             print("Warn: no valid MAEs when computing BMAE!")
