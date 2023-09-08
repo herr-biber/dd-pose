@@ -3,5 +3,5 @@
 
 # except these files
 !Dockerfile
-!requirements-py27.txt
+!requirements-py*.txt
 !00-activate.sh
