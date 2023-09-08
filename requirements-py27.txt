@@ -62,7 +62,7 @@ singledispatch==3.7.0
 six==1.16.0
 terminado==0.8.3
 testpath==0.4.4
-tornado==5.1.1
+tornado==6.3.3
 traitlets==4.3.3
 transformations==2019.4.22
 typing==3.10.0.0
