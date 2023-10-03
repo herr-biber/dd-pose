@@ -41,7 +41,7 @@ pathlib==1.0.1
 pathlib2==2.3.7.post1
 pexpect==4.8.0
 pickleshare==0.7.5
-Pillow==6.2.2
+Pillow==10.0.1
 plotly==4.14.3
 prometheus-client==0.12.0
 prompt-toolkit==1.0.18
